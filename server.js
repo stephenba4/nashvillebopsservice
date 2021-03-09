@@ -4,8 +4,9 @@ const cors = require("cors");
 const app = express();
 
 var corsOptions = {
-  origin: "http://localhost:8080"
+  origin: (process.env.NODE_ENV === 'local' ? "http://localhost:8080" : "https://www.nashvillebops.com")
 };
+console.log({corsOptions});
 
 app.use(cors(corsOptions));
 
