@@ -18,25 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  axios({
-    method: 'post',
-    url: 'https://accounts.spotify.com/api/token',
-    data: {
-      grant_type: 'client_credentials',
-    },
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Basic 27314e11bc80475cbfa7657d2055fc8c:665b3582eed4452e8f2aba58f03e2d52',
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  })
-    .then((response) => {
-      res.json({response})
-    })
-    .catch((error) => {
-      console.log(error)
-    });
-  // res.json({ name: 'Christina' });
+  res.json({ name: 'Christina' });
 });
 
 const PORT = process.env.PORT || 3000;
