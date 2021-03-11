@@ -1,10 +1,11 @@
 const express = require("express");
-const router = express.Router();
 const cors = require("cors");
-const axios = require("axios");
 require('dotenv').config({ path: "./.env" });
 const SpotifyWebApi = require('spotify-web-api-node');
+const _ = require('lodash');
+
 scopes = ['user-read-private'];
+
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_API_ID,
@@ -39,23 +40,34 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  // Get a playlist
   spotifyApi.getPlaylist('58NEDLN8pRY27qU4zkWuZV')
   .then(function(data) {
     console.log('Some information about this playlist', data.body);
-    res.json(data.body);
-  }, function(err) {
-    console.log('Something went wrong!', err);
-  }
-  // Get multiple artists
-  // spotifyApi.getArtists(['2hazSY4Ef3aB9ATXW7F5w3', '6J6yx1t3nwIDyPXk5xa7O8'])
-  // .then(function(data) {
-  //   console.log('Artists information', data.body);
-  // }, function(err) {
-  //   console.error(err);
-  // });
-);
-  
+    const artistIdsArr = [];
+    data.body.tracks.items.forEach((item) => {
+        item.track.artists.forEach((artist) => {
+          artistIdsArr.push(artist.id);
+        });
+      });
+      const artistIdsSet = new Set(artistIdsArr);
+      return artistIds = [...artistIdsSet];
+  }).then(function(artistIds) {
+    spotifyApi.getArtists(artistIds)
+    .then(function(data) {
+      console.log('Artists information', data.body);
+      let artistDetails = [];
+      data.body.artists.forEach((artist) => {
+        const { name,  followers, images } = artist;
+        const totalFollowers = _.get(followers, 'total', 0);
+        const firstImage = images[0];
+        const firstImageUrl = _.get(firstImage, 'url', '');
+        artistDetails.push({ name, totalFollowers, firstImageUrl });
+      })
+      res.json(artistDetails);
+    }, function(err) {
+      console.error(err);
+    })
+  })
 });
 
 const PORT = process.env.PORT || 3000;
