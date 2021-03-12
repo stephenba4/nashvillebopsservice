@@ -4,9 +4,6 @@ require('dotenv').config({ path: "./.env" });
 const SpotifyWebApi = require('spotify-web-api-node');
 const _ = require('lodash');
 
-scopes = ['user-read-private'];
-
-
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_API_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
@@ -32,17 +29,12 @@ var corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// parse requests of content-type - application/json 
 app.use(express.json());
-
-// parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  spotifyApi.getPlaylist('58NEDLN8pRY27qU4zkWuZV')
+  spotifyApi.getPlaylist('0T9TsvrNtkbbwSxj29341t')
   .then(function(data) {
-    console.log('Some information about this playlist', data.body);
     const artistIdsArr = [];
     data.body.tracks.items.forEach((item) => {
         item.track.artists.forEach((artist) => {
@@ -50,23 +42,29 @@ app.get("/", (req, res) => {
         });
       });
       const artistIdsSet = new Set(artistIdsArr);
-      return artistIds = [...artistIdsSet];
+      artistIds = [...artistIdsSet];
+      artistIds = artistIds.slice(0, 50)
+      return artistIds
   }).then(function(artistIds) {
+    let artistDetails = [];
     spotifyApi.getArtists(artistIds)
     .then(function(data) {
-      console.log('Artists information', data.body);
-      let artistDetails = [];
       data.body.artists.forEach((artist) => {
-        const { name,  followers, images } = artist;
+        const { id, name,  followers, images } = artist;
         const totalFollowers = _.get(followers, 'total', 0);
         const firstImage = images[0];
         const firstImageUrl = _.get(firstImage, 'url', '');
-        artistDetails.push({ name, totalFollowers, firstImageUrl });
+        artistDetails.push(
+          {
+            id,
+            artist: name,
+            spotifyFollowers: totalFollowers,
+            img: firstImageUrl,
+          }
+        );
       })
-      res.json(artistDetails);
-    }, function(err) {
-      console.error(err);
-    })
+      res.json(artistDetails)
+    })    
   })
 });
 
