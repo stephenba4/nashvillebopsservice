@@ -33,38 +33,39 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  spotifyApi.getPlaylist('0T9TsvrNtkbbwSxj29341t')
+  spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 0 })
   .then(function(data) {
     const artistIdsArr = [];
-    data.body.tracks.items.forEach((item) => {
-        item.track.artists.forEach((artist) => {
-          artistIdsArr.push(artist.id);
-        });
-      });
-      const artistIdsSet = new Set(artistIdsArr);
-      artistIds = [...artistIdsSet];
-      artistIds = artistIds.slice(0, 50)
-      return artistIds
+    data.body.items.forEach((item) => {
+      item.track.artists.forEach((artist) => {
+        artistIdsArr.push(artist.id);
+      })
+    })
+    const artistIdsSet = new Set(artistIdsArr);
+    artistIds = [...artistIdsSet];
+    return artistIds
   }).then(function(artistIds) {
     let artistDetails = [];
     spotifyApi.getArtists(artistIds)
     .then(function(data) {
       data.body.artists.forEach((artist) => {
-        const { id, name,  followers, images } = artist;
+        const { id, name, followers, images, external_urls } = artist;
         const totalFollowers = _.get(followers, 'total', 0);
         const firstImage = images[0];
         const firstImageUrl = _.get(firstImage, 'url', '');
+        const spotify = _.get(external_urls, 'spotify', '');
         artistDetails.push(
           {
             id,
             artist: name,
             spotifyFollowers: totalFollowers,
             img: firstImageUrl,
+            spotify,
           }
         );
       })
       res.json(artistDetails)
-    })    
+    })
   })
 });
 
