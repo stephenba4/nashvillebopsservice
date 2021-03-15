@@ -24,10 +24,7 @@ app.get("/", (req, res) => {
   });
   
   spotifyApi.clientCredentialsGrant().then(
-    function(data) {
-      console.log('The access token expires in ' + data.body['expires_in']);
-      console.log('The access token is ' + data.body['access_token']);
-  
+    function(data) {  
       // Save the access token so that it's used in future calls
       spotifyApi.setAccessToken(data.body['access_token']);
     },
@@ -35,7 +32,7 @@ app.get("/", (req, res) => {
       console.log('Something went wrong when retrieving an access token', err);
     }
   ).then(function() {
-    spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 45, offset: 0 })
+    spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 0 })
       .then(function(data) {
         const artistIdsArr = [];
         data.body.items.forEach((item) => {
@@ -65,7 +62,7 @@ app.get("/", (req, res) => {
           })
           return artistDetails
         }).then(function(artistDetails2) {
-          spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 45, offset: 45 })
+          spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 40 })
             .then(function(data) {
               const artistIdsArr = [];
               data.body.items.forEach((item) => {
@@ -95,7 +92,7 @@ app.get("/", (req, res) => {
                 })
                 return artistDetails2
               }).then(function(artistDetails3) {
-                spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 45, offset: 135 })
+                spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 80 })
                 .then(function(data) {
                   const artistIdsArr = [];
                   data.body.items.forEach((item) => {
@@ -125,7 +122,7 @@ app.get("/", (req, res) => {
                     })
                     return artistDetails3
                   }).then(function(artistDetails4) {
-                    spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 45, offset: 180 })
+                    spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 120 })
                     .then(function(data) {
                       const artistIdsArr = [];
                       data.body.items.forEach((item) => {
@@ -154,12 +151,76 @@ app.get("/", (req, res) => {
                           );
                         })
                         return artistDetails4
-                      }).then(function(artistDetails5) {
-                        const distinctArtists = _.uniqBy(artistDetails5, 'id')
-                        res.json(distinctArtists)
-                      },
-                      function(err) {
-                        console.error(err);
+                      }).then(function(artistDetails5) {                       
+                        spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 160 })
+                        .then(function(data) {
+                          const artistIdsArr = [];
+                          data.body.items.forEach((item) => {
+                            item.track.artists.forEach((artist) => {
+                              artistIdsArr.push(artist.id);
+                            })
+                          })
+                          return artistIdsArr
+                        }).then(function(artistIds) {
+                          spotifyApi.getArtists(artistIds)
+                          .then(function(data) {
+                            data.body.artists.forEach((artist) => {
+                              const { id, name, followers, images, external_urls } = artist;
+                              const totalFollowers = _.get(followers, 'total', 0);
+                              const firstImage = images[0];
+                              const firstImageUrl = _.get(firstImage, 'url', '');
+                              const spotify = _.get(external_urls, 'spotify', '');
+                              artistDetails5.push(
+                                {
+                                  id,
+                                  artist: name,
+                                  spotifyFollowers: totalFollowers,
+                                  img: firstImageUrl,
+                                  spotify,
+                                }
+                              );
+                            })
+                            return artistDetails5
+                          }).then(function(artistDetails6) {
+                            spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 200 })
+                            .then(function(data) {
+                              const artistIdsArr = [];
+                              data.body.items.forEach((item) => {
+                                item.track.artists.forEach((artist) => {
+                                  artistIdsArr.push(artist.id);
+                                })
+                              })
+                              return artistIdsArr
+                            }).then(function(artistIds) {
+                              spotifyApi.getArtists(artistIds)
+                              .then(function(data) {
+                                data.body.artists.forEach((artist) => {
+                                  const { id, name, followers, images, external_urls } = artist;
+                                  const totalFollowers = _.get(followers, 'total', 0);
+                                  const firstImage = images[0];
+                                  const firstImageUrl = _.get(firstImage, 'url', '');
+                                  const spotify = _.get(external_urls, 'spotify', '');
+                                  artistDetails6.push(
+                                    {
+                                      id,
+                                      artist: name,
+                                      spotifyFollowers: totalFollowers,
+                                      img: firstImageUrl,
+                                      spotify,
+                                    }
+                                  );
+                                })
+                                return artistDetails6
+                              }).then(function(artistDetails7) {
+                                const distinctArtists = _.uniqBy(artistDetails7, 'id')
+                                res.json(distinctArtists)
+                              },
+                              function(err) {
+                                console.error(err);
+                              })
+                            })
+                          })
+                        })
                       })
                     })
                   })
