@@ -213,7 +213,9 @@ app.get("/", (req, res) => {
                                 return artistDetails6
                               }).then(function(artistDetails7) {
                                 const distinctArtists = _.uniqBy(artistDetails7, 'id')
-                                res.json(distinctArtists)
+                                const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
+                                const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
+                                res.json(artists)
                               },
                               function(err) {
                                 console.error(err);
