@@ -14,7 +14,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
+app.get("/top100", (req, res) => {
   let artistDetails = [];
 
   const spotifyApi = new SpotifyWebApi({
