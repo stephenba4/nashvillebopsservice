@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const SpotifyWebApi = require('spotify-web-api-node');
+require('dotenv').config({ path: "./.env" });
 const _ = require('lodash');
 
 const app = express();
@@ -9,131 +10,11 @@ var corsOptions = {
   origin: ("http://localhost:8080")
 };
 
-console.log('heyy')
-
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/monthlyRecap", (req, res) => {
-  let artistDetails = [];
-
-  const spotifyApi = new SpotifyWebApi({
-    clientId: process.env.SPOTIFY_API_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  });
-
-  spotifyApi.clientCredentialsGrant().then(
-    function(data) {  
-      // Save the access token so that it's used in future calls
-      spotifyApi.setAccessToken(data.body['access_token']);
-    },
-    function(err) {
-      console.log('Something went wrong when retrieving an access token', err);
-    }
-  ).then(function() {
-    spotifyApi.getPlaylistTracks('58NEDLN8pRY27qU4zkWuZV', { limit: 40, offset: 0 })
-      .then(function(data) {
-        const artistIdsArr = [];
-        data.body.items.forEach((item) => {
-          item.track.artists.forEach((artist) => {
-            artistIdsArr.push(artist.id);
-          })
-        })
-        return artistIdsArr
-      }).then(function(artistIds) {
-        spotifyApi.getArtists(artistIds)
-        .then(function(data) {
-          data.body.artists.forEach((artist) => {
-            const { id, name, followers, images, external_urls } = artist;
-            const totalFollowers = _.get(followers, 'total', 0);
-            const firstImage = images[0];
-            const firstImageUrl = _.get(firstImage, 'url', '');
-            const spotify = _.get(external_urls, 'spotify', '');
-            artistDetails.push(
-              {
-                id,
-                artist: name,
-                spotifyFollowers: totalFollowers,
-                img: firstImageUrl,
-                spotify,
-              }
-            );
-          })
-          return artistDetails
-        }).then(function(artistDetails2) {
-          const distinctArtists = _.uniqBy(artistDetails2, 'id')
-          const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
-          const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
-          res.json(artists)
-        },
-        function(err) {
-          console.error(err);
-        })
-      })
-  })
-});
-
-app.get("/weeklyRadar", (req, res) => {
-  let artistDetails = [];
-
-  const spotifyApi = new SpotifyWebApi({
-    clientId: process.env.SPOTIFY_API_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  });
-
-  spotifyApi.clientCredentialsGrant().then(
-    function(data) {  
-      // Save the access token so that it's used in future calls
-      spotifyApi.setAccessToken(data.body['access_token']);
-    },
-    function(err) {
-      console.log('Something went wrong when retrieving an access token', err);
-    }
-  ).then(function() {
-    spotifyApi.getPlaylistTracks('2RAgrtMEF6ZTTg2jh3FNY2', { limit: 40, offset: 0 })
-      .then(function(data) {
-        const artistIdsArr = [];
-        data.body.items.forEach((item) => {
-          item.track.artists.forEach((artist) => {
-            artistIdsArr.push(artist.id);
-          })
-        })
-        return artistIdsArr
-      }).then(function(artistIds) {
-        spotifyApi.getArtists(artistIds)
-        .then(function(data) {
-          data.body.artists.forEach((artist) => {
-            const { id, name, followers, images, external_urls } = artist;
-            const totalFollowers = _.get(followers, 'total', 0);
-            const firstImage = images[0];
-            const firstImageUrl = _.get(firstImage, 'url', '');
-            const spotify = _.get(external_urls, 'spotify', '');
-            artistDetails.push(
-              {
-                id,
-                artist: name,
-                spotifyFollowers: totalFollowers,
-                img: firstImageUrl,
-                spotify,
-              }
-            );
-          })
-          return artistDetails
-        }).then(function(artistDetails2) {
-          const distinctArtists = _.uniqBy(artistDetails2, 'id')
-          const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
-          const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
-          res.json(artists)
-        },
-        function(err) {
-          console.error(err);
-        })
-      })
-  })
-});
-
-app.get("/top100", (req, res) => {
+app.get("/", (req, res) => {
   let artistDetails = [];
 
   const spotifyApi = new SpotifyWebApi({
@@ -350,6 +231,124 @@ app.get("/top100", (req, res) => {
         })
       })
   });
+});
+
+app.get("/monthlyRecap", (req, res) => {
+  let artistDetails = [];
+
+  const spotifyApi = new SpotifyWebApi({
+    clientId: process.env.SPOTIFY_API_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+  });
+
+  spotifyApi.clientCredentialsGrant().then(
+    function(data) {  
+      // Save the access token so that it's used in future calls
+      spotifyApi.setAccessToken(data.body['access_token']);
+    },
+    function(err) {
+      console.log('Something went wrong when retrieving an access token', err);
+    }
+  ).then(function() {
+    spotifyApi.getPlaylistTracks('58NEDLN8pRY27qU4zkWuZV', { limit: 40, offset: 0 })
+      .then(function(data) {
+        const artistIdsArr = [];
+        data.body.items.forEach((item) => {
+          item.track.artists.forEach((artist) => {
+            artistIdsArr.push(artist.id);
+          })
+        })
+        return artistIdsArr
+      }).then(function(artistIds) {
+        spotifyApi.getArtists(artistIds)
+        .then(function(data) {
+          data.body.artists.forEach((artist) => {
+            const { id, name, followers, images, external_urls } = artist;
+            const totalFollowers = _.get(followers, 'total', 0);
+            const firstImage = images[0];
+            const firstImageUrl = _.get(firstImage, 'url', '');
+            const spotify = _.get(external_urls, 'spotify', '');
+            artistDetails.push(
+              {
+                id,
+                artist: name,
+                spotifyFollowers: totalFollowers,
+                img: firstImageUrl,
+                spotify,
+              }
+            );
+          })
+          return artistDetails
+        }).then(function(artistDetails2) {
+          const distinctArtists = _.uniqBy(artistDetails2, 'id')
+          const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
+          const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
+          res.json(artists)
+        },
+        function(err) {
+          console.error(err);
+        })
+      })
+  })
+});
+
+app.get("/weeklyRadar", (req, res) => {
+  let artistDetails = [];
+
+  const spotifyApi = new SpotifyWebApi({
+    clientId: process.env.SPOTIFY_API_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+  });
+
+  spotifyApi.clientCredentialsGrant().then(
+    function(data) {  
+      // Save the access token so that it's used in future calls
+      spotifyApi.setAccessToken(data.body['access_token']);
+    },
+    function(err) {
+      console.log('Something went wrong when retrieving an access token', err);
+    }
+  ).then(function() {
+    spotifyApi.getPlaylistTracks('2RAgrtMEF6ZTTg2jh3FNY2', { limit: 40, offset: 0 })
+      .then(function(data) {
+        const artistIdsArr = [];
+        data.body.items.forEach((item) => {
+          item.track.artists.forEach((artist) => {
+            artistIdsArr.push(artist.id);
+          })
+        })
+        return artistIdsArr
+      }).then(function(artistIds) {
+        spotifyApi.getArtists(artistIds)
+        .then(function(data) {
+          data.body.artists.forEach((artist) => {
+            const { id, name, followers, images, external_urls } = artist;
+            const totalFollowers = _.get(followers, 'total', 0);
+            const firstImage = images[0];
+            const firstImageUrl = _.get(firstImage, 'url', '');
+            const spotify = _.get(external_urls, 'spotify', '');
+            artistDetails.push(
+              {
+                id,
+                artist: name,
+                spotifyFollowers: totalFollowers,
+                img: firstImageUrl,
+                spotify,
+              }
+            );
+          })
+          return artistDetails
+        }).then(function(artistDetails2) {
+          const distinctArtists = _.uniqBy(artistDetails2, 'id')
+          const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
+          const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
+          res.json(artists)
+        },
+        function(err) {
+          console.error(err);
+        })
+      })
+  })
 });
 
 const PORT = process.env.PORT || 3000;
