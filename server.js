@@ -211,14 +211,46 @@ app.get("/", (req, res) => {
                                 })
                                 return artistDetails6
                               }).then(function(artistDetails7) {
-                                const distinctArtists = _.uniqBy(artistDetails7, 'id')
-                                const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
-                                const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
-                                res.json(artists)
-                              },
-                              function(err) {
-                                console.error(err);
-                              })
+                                spotifyApi.getPlaylistTracks('0T9TsvrNtkbbwSxj29341t', { limit: 40, offset: 240 })
+                                .then(function(data) {
+                                  const artistIdsArr = [];
+                                  data.body.items.forEach((item) => {
+                                    item.track.artists.forEach((artist) => {
+                                      artistIdsArr.push(artist.id);
+                                    })
+                                  })
+                                  return artistIdsArr
+                                }).then(function(artistIds) {
+                                  spotifyApi.getArtists(artistIds)
+                                  .then(function(data) {
+                                    data.body.artists.forEach((artist) => {
+                                      const { id, name, followers, images, external_urls } = artist;
+                                      const totalFollowers = _.get(followers, 'total', 0);
+                                      const firstImage = images[0];
+                                      const firstImageUrl = _.get(firstImage, 'url', '');
+                                      const spotify = _.get(external_urls, 'spotify', '');
+                                      artistDetails7.push(
+                                        {
+                                          id,
+                                          artist: name,
+                                          spotifyFollowers: totalFollowers,
+                                          img: firstImageUrl,
+                                          spotify,
+                                        }
+                                      );
+                                    })
+                                    return artistDetails7
+                                  }).then(function(artistDetails8) {
+                                    const distinctArtists = _.uniqBy(artistDetails8, 'id')
+                                    const sorted = _.orderBy(distinctArtists, 'spotifyFollowers', 'desc')
+                                    const artists = sorted.map((item, index) => ({...item, position: index + 1 }))
+                                    res.json(artists)
+                                  },
+                                  function(err) {
+                                    console.error(err);
+                                  })        
+                                })
+                              })             
                             })
                           })
                         })
